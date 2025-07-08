@@ -1,0 +1,3 @@
+Prisma helps to write SQL code easily 
+we are using supabase for postgresql database 
+arject for protection
