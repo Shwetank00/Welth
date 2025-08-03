@@ -40,20 +40,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # npx inngest-cli@latest dev
 
 # http://127.0.0.1:8288/runs
-
-using clerk for user authentication
-
-using supabase as database it is a postgre sql database we are using moe generic (prisma) instead of supabase internal framework so that if we want to switch from supabase we can easily
-
-using arcjet for security--> bot detection rate limiting email validation
-
-using inngest for recalculating reccuring transactions, monthly financial report, budget alerts using AI
-
-using nextjs for frontend and backend
-
-npx prisma migrate dev --name create-models-->is to push the prisma table
-
-using prisma writes the sql code by itself so it makes our work easy
-
-npm i @prisma/client
-npx inngest-cli@latest dev
