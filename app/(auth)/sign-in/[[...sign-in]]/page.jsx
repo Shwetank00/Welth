@@ -1,11 +1,18 @@
-import { SignIn } from "@clerk/nextjs";
+"use client";
 
-const Page = () => {
+import { SignIn, SignedIn, SignedOut } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
+
+export default function SignInPage() {
   return (
-    <div>
-      <SignIn />
-    </div>
-  );
-};
+    <>
+      {/* Show the form only to guests */}
+      <SignedOut>
+        <SignIn fallbackRedirectUrl="/dashboard" />
+      </SignedOut>
 
-export default Page;
+      {/* If a session already exists, send the user away once */}
+      <SignedIn>{redirect("/dashboard")}</SignedIn>
+    </>
+  );
+}

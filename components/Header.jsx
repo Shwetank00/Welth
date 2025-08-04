@@ -25,6 +25,7 @@ const Header = async () => {
             width={"200"}
             alt="Logo"
             className="h-12 w-auto object-contain"
+            priority
           />
         </Link>
         {/* MENU */}
