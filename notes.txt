@@ -24,3 +24,12 @@ npm i react-hook-form zod @hookform/resolvers
 manage forms and zod validate them
 
 npm i @clerk/nextjs
+
+npx inngest-cli@latest dev
+
+npm run email
+
+react email for email template
+
+resend for sending emails
+
