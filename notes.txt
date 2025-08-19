@@ -25,11 +25,21 @@ manage forms and zod validate them
 
 npm i @clerk/nextjs
 
-npx inngest-cli@latest dev
-
 npm run email
 
 react email for email template
 
 resend for sending emails
 
+
+http://localhost:3000/
+https://supabase.com/
+https://www.inngest.com/
+https://clerk.com/
+https://resend.com/emails
+https://arcjet.com/
+
+npm ci
+npx prisma generate
+npm run dev
+npx inngest-cli@latest dev
