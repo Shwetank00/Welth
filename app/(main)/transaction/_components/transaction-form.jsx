@@ -32,8 +32,8 @@ import { transactionSchema } from "@/app/lib/schema";
 import { ReceiptScanner } from "./recipt-scanner";
 
 export function AddTransactionForm({
-  accounts,
-  categories,
+  accounts = [],
+  categories = [],
   editMode = false,
   initialData = null,
 }) {
@@ -41,104 +41,156 @@ export function AddTransactionForm({
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
 
+  const defaultValues =
+    editMode && initialData
+      ? {
+          type: initialData.type, // "EXPENSE" | "INCOME"
+          amount: initialData.amount, // number
+          description: initialData.description ?? "",
+          accountId: initialData.accountId,
+          category: initialData.category, // category id
+          date: new Date(initialData.date),
+          isRecurring: Boolean(initialData.isRecurring),
+          recurringInterval: initialData.recurringInterval ?? undefined,
+        }
+      : {
+          type: "EXPENSE",
+          amount: undefined, // RHF will coerce via valueAsNumber
+          description: "",
+          accountId: accounts.find((ac) => ac.isDefault)?.id ?? accounts[0]?.id,
+          date: new Date(),
+          isRecurring: false,
+          recurringInterval: undefined,
+        };
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     watch,
     setValue,
-    getValues,
     reset,
+    getValues,
   } = useForm({
     resolver: zodResolver(transactionSchema),
-    defaultValues:
-      editMode && initialData
-        ? {
-            type: initialData.type,
-            amount: initialData.amount.toString(),
-            description: initialData.description,
-            accountId: initialData.accountId,
-            category: initialData.category,
-            date: new Date(initialData.date),
-            isRecurring: initialData.isRecurring,
-            ...(initialData.recurringInterval && {
-              recurringInterval: initialData.recurringInterval,
-            }),
-          }
-        : {
-            type: "EXPENSE",
-            amount: "",
-            description: "",
-            accountId: accounts.find((ac) => ac.isDefault)?.id,
-            date: new Date(),
-            isRecurring: false,
-          },
+    defaultValues,
   });
 
   const {
-    loading: transactionLoading,
     fn: transactionFn,
     data: transactionResult,
+    error: txError,
   } = useFetch(editMode ? updateTransaction : createTransaction);
 
-  const onSubmit = (data) => {
-    const formData = {
-      ...data,
-      amount: parseFloat(data.amount),
-    };
+  const type = watch("type");
+  const isRecurring = watch("isRecurring");
+  const date = watch("date");
+  const selectedAccountId = watch("accountId");
+  const selectedCategory = watch("category");
 
-    if (editMode) {
-      transactionFn(editId, formData);
-    } else {
-      transactionFn(formData);
-    }
-  };
+  const filteredCategories = categories.filter((c) => c.type === type);
 
-  const handleScanComplete = (scannedData) => {
-    if (scannedData) {
-      setValue("amount", scannedData.amount.toString());
-      setValue("date", new Date(scannedData.date));
-      if (scannedData.description) {
-        setValue("description", scannedData.description);
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      // Clean payload
+      const payload = {
+        ...data,
+        // If recurring toggle is off, drop interval to avoid stale values
+        ...(data.isRecurring ? {} : { recurringInterval: undefined }),
+      };
+
+      if (editMode) {
+        await transactionFn(editId, payload);
+        // toast handled by effect for consistency with create
+      } else {
+        await transactionFn(payload);
       }
-      if (scannedData.category) {
-        setValue("category", scannedData.category);
-      }
-      toast.success("Receipt scanned successfully");
+    } catch {
+      // Any thrown error is handled below by the effect as well
     }
-  };
+  });
 
+  // Effect: show toast, reset, and navigate after mutation
   useEffect(() => {
-    if (transactionResult?.success && !transactionLoading) {
+    if (!transactionResult && !txError) return;
+
+    if (transactionResult?.success) {
       toast.success(
         editMode
           ? "Transaction updated successfully"
           : "Transaction created successfully"
       );
-      reset();
-      router.push(`/account/${transactionResult.data.accountId}`);
+
+      // Clear the form only in create mode; keep values in edit
+      if (!editMode) {
+        reset({
+          ...defaultValues,
+          // keep selected account so user can add multiple quickly
+          accountId: getValues("accountId"),
+        });
+      }
+
+      const accountIdFromResult =
+        transactionResult?.data?.accountId ?? getValues("accountId");
+      if (accountIdFromResult) {
+        router.push(`/account/${accountIdFromResult}`);
+      }
+    } else if (txError || transactionResult?.error) {
+      const msg =
+        transactionResult?.error?.message ||
+        (typeof transactionResult?.error === "string"
+          ? transactionResult.error
+          : undefined) ||
+        (typeof txError === "string" ? txError : undefined) ||
+        "Failed to save transaction";
+      toast.error(msg);
     }
-  }, [transactionResult, transactionLoading, editMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactionResult, txError]);
 
-  const type = watch("type");
-  const isRecurring = watch("isRecurring");
-  const date = watch("date");
-
-  const filteredCategories = categories.filter(
-    (category) => category.type === type
-  );
+  // Populate from OCR/scan
+  const handleScanComplete = (scannedData) => {
+    if (!scannedData) return;
+    if (scannedData.amount != null) {
+      setValue("amount", Number(scannedData.amount), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (scannedData.date) {
+      setValue("date", new Date(scannedData.date), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (scannedData.description) {
+      setValue("description", scannedData.description, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (scannedData.category) {
+      setValue("category", scannedData.category, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    toast.success("Receipt scanned successfully");
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Receipt Scanner - Only show in create mode */}
+    <form onSubmit={onSubmit} className="space-y-6">
+      {/* Receipt Scanner - create mode only */}
       {!editMode && <ReceiptScanner onScanComplete={handleScanComplete} />}
 
       {/* Type */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Type</label>
         <Select
-          onValueChange={(value) => setValue("type", value)}
-          defaultValue={type}
+          value={type}
+          onValueChange={(v) =>
+            setValue("type", v, { shouldDirty: true, shouldValidate: true })
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
@@ -153,7 +205,7 @@ export function AddTransactionForm({
         )}
       </div>
 
-      {/* Amount and Account */}
+      {/* Amount + Account */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium">Amount</label>
@@ -161,7 +213,7 @@ export function AddTransactionForm({
             type="number"
             step="0.01"
             placeholder="0.00"
-            {...register("amount")}
+            {...register("amount", { valueAsNumber: true })}
           />
           {errors.amount && (
             <p className="text-sm text-red-500">{errors.amount.message}</p>
@@ -171,8 +223,13 @@ export function AddTransactionForm({
         <div className="space-y-2">
           <label className="text-sm font-medium">Account</label>
           <Select
-            onValueChange={(value) => setValue("accountId", value)}
-            defaultValue={getValues("accountId")}
+            value={selectedAccountId}
+            onValueChange={(v) =>
+              setValue("accountId", v, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select account" />
@@ -185,6 +242,7 @@ export function AddTransactionForm({
               ))}
               <CreateAccountDrawer>
                 <Button
+                  type="button"
                   variant="ghost"
                   className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
                 >
@@ -203,8 +261,13 @@ export function AddTransactionForm({
       <div className="space-y-2">
         <label className="text-sm font-medium">Category</label>
         <Select
-          onValueChange={(value) => setValue("category", value)}
-          defaultValue={getValues("category")}
+          value={selectedCategory}
+          onValueChange={(v) =>
+            setValue("category", v, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder="Select category" />
@@ -242,10 +305,10 @@ export function AddTransactionForm({
             <Calendar
               mode="single"
               selected={date}
-              onSelect={(date) => setValue("date", date)}
-              disabled={(date) =>
-                date > new Date() || date < new Date("1900-01-01")
+              onSelect={(d) =>
+                setValue("date", d, { shouldDirty: true, shouldValidate: true })
               }
+              disabled={(d) => d > new Date() || d < new Date("1900-01-01")}
               initialFocus
             />
           </PopoverContent>
@@ -264,7 +327,7 @@ export function AddTransactionForm({
         )}
       </div>
 
-      {/* Recurring Toggle */}
+      {/* Recurring */}
       <div className="flex flex-row items-center justify-between rounded-lg border p-4">
         <div className="space-y-0.5">
           <label className="text-base font-medium">Recurring Transaction</label>
@@ -274,17 +337,32 @@ export function AddTransactionForm({
         </div>
         <Switch
           checked={isRecurring}
-          onCheckedChange={(checked) => setValue("isRecurring", checked)}
+          onCheckedChange={(checked) => {
+            setValue("isRecurring", checked, {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+            if (!checked) {
+              setValue("recurringInterval", undefined, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }
+          }}
         />
       </div>
 
-      {/* Recurring Interval */}
       {isRecurring && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Recurring Interval</label>
           <Select
-            onValueChange={(value) => setValue("recurringInterval", value)}
-            defaultValue={getValues("recurringInterval")}
+            value={watch("recurringInterval")}
+            onValueChange={(v) =>
+              setValue("recurringInterval", v, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select interval" />
@@ -309,13 +387,13 @@ export function AddTransactionForm({
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="flex-1"
           onClick={() => router.back()}
         >
           Cancel
         </Button>
-        <Button type="submit" className="w-full" disabled={transactionLoading}>
-          {transactionLoading ? (
+        <Button type="submit" className="flex-1" disabled={isSubmitting}>
+          {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               {editMode ? "Updating..." : "Creating..."}
