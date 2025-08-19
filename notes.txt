@@ -42,9 +42,13 @@ https://www.inngest.com/
 https://clerk.com/
 https://resend.com/emails
 https://arcjet.com/
+https://vercel.com/shwetank-jains-projects
+https://aistudio.google.com
+http://localhost:8288/runs
+https://welth-finances.vercel.app/dashboard
 
+to run locally
 npm ci
 npx prisma generate
 npm run dev
 npx inngest-cli@latest dev
-
