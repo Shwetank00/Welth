@@ -31,6 +31,10 @@ react email for email template
 
 resend for sending emails
 
+rate limiting using arcjet
+
+google gemini 1.5 flash for reciept scanning using AI
+
 
 http://localhost:3000/
 https://supabase.com/
@@ -43,3 +47,4 @@ npm ci
 npx prisma generate
 npm run dev
 npx inngest-cli@latest dev
+
