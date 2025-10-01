@@ -1,0 +1,44 @@
+< [33mb8ba6f9[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m header fixes
+< [33mda4f94f[m header fix
+< [33m90db8ec[m clerk publishable key fixed
+< [33m783265c[m some fixes and app is deployed in vercel
+< [33ma14e973[m preparing for deployment
+< [33m31d213f[m montly AI insights with montly transaction report email functionality along with dashboard expnse pie chart UI is added
+< [33m893f364[m edit transaction feature is added and some fixes regarding toast message and css and loader are made
+< [33m0000d24[m rate limiting with arcjet and recurrin g transaction adding on recurring date using inngest is added
+< [33md447612[m create transaction feature and reciept scanner using AI feature is added
+< [33m1fa5ea3[m sending budget alert email functionality is added
+< [33m27ca9fa[m cron job for budget alert is set
+< [33mdb0fbdc[m filter and sort transactions, bulk delette transactions, transaction bar chart and monthly budget is fixed
+< [33m90562f6[m transaction table is added
+< [33m5b632ee[m change default account, account page and deedin transaction API is added
+< [33m1cd1940[m custom hook to fetch api, fetch  user account and render user account
+< [33m0051a17[m routing, dashboard page, create-account backend and ceate account drawer is added
+< [33m90bfa89[m user is added in database on creating account
+< [33m0109ea8[m created database models, storing user data in database, initialising prisma, syncing database to the environment
+< [33m053fecb[m landing page is completed with some stats and reviews about the app
+< [33ma6976a2[m Header file completed and user authentication completed
+< [33m5dbabdc[m app layout and user authentication using clerk
+< [33m62639fb[m next project initialization
+> [33md62be95[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m header fixes
+> [33maea78f3[m header fix
+> [33m79f4f13[m clerk publishable key fixed
+> [33me053a1f[m some fixes and app is deployed in vercel
+> [33mef6e2b1[m preparing for deployment
+> [33m81d5f4a[m montly AI insights with montly transaction report email functionality along with dashboard expnse pie chart UI is added
+> [33m7361c0b[m edit transaction feature is added and some fixes regarding toast message and css and loader are made
+> [33mfb9c9d4[m rate limiting with arcjet and recurrin g transaction adding on recurring date using inngest is added
+> [33m8134a7e[m create transaction feature and reciept scanner using AI feature is added
+> [33m02bd3a6[m sending budget alert email functionality is added
+> [33m77332b4[m cron job for budget alert is set
+> [33m0b6adac[m filter and sort transactions, bulk delette transactions, transaction bar chart and monthly budget is fixed
+> [33mf1e068d[m transaction table is added
+> [33mf302698[m change default account, account page and deedin transaction API is added
+> [33m35371fa[m custom hook to fetch api, fetch  user account and render user account
+> [33mfcd4b5f[m routing, dashboard page, create-account backend and ceate account drawer is added
+> [33m5051059[m user is added in database on creating account
+> [33m12b83a1[m created database models, storing user data in database, initialising prisma, syncing database to the environment
+> [33m8879360[m landing page is completed with some stats and reviews about the app
+> [33mf85f883[m Header file completed and user authentication completed
+> [33m24fd41f[m app layout and user authentication using clerk
+> [33m754e396[m next project initialization
